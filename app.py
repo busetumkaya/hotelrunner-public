@@ -12,6 +12,9 @@ st.title("Send Time Optimizer")
 file = st.file_uploader("Upload CSV")
 
 if file is not None:
+    st.info("⬆️ Upload a CSV file to start analysis")
+    st.stop()
+
 
     # -----------------------------
     # 2. LOAD DATA
