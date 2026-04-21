@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import re
 
-st.title("📊 Send Time Optimizer")
+st.title("Send Time Optimizer")
 
 # -----------------------------
 # 1. FILE UPLOAD
@@ -112,7 +112,7 @@ if file is not None:
     # -----------------------------
     # 9. OUTPUT
     # -----------------------------
-    st.subheader("🏆 Best Send Times")
+    st.subheader("Best Send Times")
 
     st.dataframe(agg)
 
@@ -122,8 +122,9 @@ if file is not None:
     # 10. INSIGHT (WHY THIS WORKS)
     # -----------------------------
     top = agg.iloc[0]
+    st.success(f"Best time is: {top['hour_interval']} (Score: {top['score']:.2f})")
 
-    st.subheader("🧠 Why this hour?")
+    st.subheader("Why this hour?")
 
     st.write(f"""
     - Open Rate: {top['open_rate']:.2%}
@@ -150,7 +151,7 @@ if file is not None:
             values='ctr'
         )
 
-        st.subheader("🔥 Heatmap (CTR)")
+        st.subheader("Heatmap (CTR)")
         st.dataframe(heatmap.style.background_gradient(cmap="Blues"))
 
 else:
