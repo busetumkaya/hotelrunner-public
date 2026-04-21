@@ -152,7 +152,7 @@ if file is not None:
         )
 
         st.subheader("Heatmap (CTR)")
-        st.dataframe(heatmap.style.background_gradient(cmap="Blues"))
+        st.dataframe(heatmap)
 
 else:
     st.info("⬆️ Upload a CSV file to start")
