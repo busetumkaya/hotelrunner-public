@@ -58,7 +58,7 @@ if 'day_of_week' in df.columns:
     if day != "All":
         df = df[df['day_of_week'].str.lower() == day.lower()]
 
-segment = st.sidebar.text_input("Segment (EN, TR, OTA...)")
+segment = st.sidebar.text_input("Segment (EN, TR)")
 
 if segment:
     df = df[
