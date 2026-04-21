@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import re
+import plotly.express as px
 
 st.title("Send Time Optimizer")
 
@@ -46,7 +47,7 @@ if file is not None:
     df = df[~df.apply(is_test, axis=1)]
 
     # -----------------------------
-    # 5. SIDEBAR FILTERS (ADD HERE)
+    # 5. SIDEBAR FILTERS
     # -----------------------------
     st.sidebar.header("Filters")
 
@@ -70,7 +71,7 @@ if file is not None:
         ]
 
     # -----------------------------
-    # 6. WEIGHTS (ADD HERE)
+    # 6. WEIGHTS
     # -----------------------------
     st.sidebar.header("Weights")
 
@@ -133,37 +134,39 @@ if file is not None:
     - Based on {int(top['base'])} sends
     """)
 
-    # -----------------------------
-    # 11. HEATMAP (ADD LAST)
-    # -----------------------------
-    if 'day_of_week' in df.columns:
+# -----------------------------
+# 11. HEATMAP
+# -----------------------------
+if 'day_of_week' in df.columns:
 
-        pivot = df.groupby(['day_of_week', 'hour_interval']).agg({
-            'base': 'sum',
-            'unique_clicks': 'sum'
-        }).reset_index()
+    pivot = df.groupby(['day_of_week', 'hour_interval']).agg({
+        'base': 'sum',
+        'unique_clicks': 'sum'
+    }).reset_index()
 
-        pivot['ctr'] = pivot['unique_clicks'] / pivot['base']
+    pivot = pivot[pivot['base'] > 0]  # important safety fix
 
-        heatmap = pivot.pivot_table(
-            index='day_of_week',
-            columns='hour_interval',
-            values='ctr'
-        )
+    pivot['ctr'] = pivot['unique_clicks'] / pivot['base']
 
-        st.subheader("Heatmap (CTR)")
+    heatmap = pivot.pivot_table(
+        index='day_of_week',
+        columns='hour_interval',
+        values='ctr',
+        aggfunc='mean'
+    )
 
-        # safety cleanup (important)
-        heatmap = heatmap.fillna(0)
+    st.subheader("Heatmap (CTR)")
 
-        fig = px.imshow(
-            heatmap,
-            text_auto=".2%",
-            color_continuous_scale="Blues",
-            aspect="auto"
-        )
+    heatmap = heatmap.fillna(0)
 
-st.plotly_chart(fig, use_container_width=True)
+    fig = px.imshow(
+        heatmap,
+        text_auto=".2%",
+        color_continuous_scale="Blues",
+        aspect="auto"
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
 
 else:
-    st.info("⬆️ Upload a CSV file to start")
+    st.warning("No day_of_week column found in dataset")
