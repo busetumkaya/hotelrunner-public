@@ -152,7 +152,18 @@ if file is not None:
         )
 
         st.subheader("Heatmap (CTR)")
-        st.dataframe(heatmap)
+
+        # safety cleanup (important)
+        heatmap = heatmap.fillna(0)
+
+        fig = px.imshow(
+            heatmap,
+            text_auto=".2%",
+            color_continuous_scale="Blues",
+            aspect="auto"
+        )
+
+st.plotly_chart(fig, use_container_width=True)
 
 else:
     st.info("⬆️ Upload a CSV file to start")
