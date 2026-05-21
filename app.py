@@ -311,7 +311,7 @@ if overall_best['hour_num'] < 9 or overall_best['hour_num'] >= 18:
             f"(Score: {row['score']:.2f})"
         )
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
     st.metric(
