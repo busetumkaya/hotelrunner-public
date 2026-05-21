@@ -148,9 +148,16 @@ DAY_ORDER = [
 
 if 'day_of_week' in df.columns:
 
+    df['day_of_week'] = (
+        df['day_of_week']
+        .astype(str)
+        .str.strip()
+        .str.lower()
+    )
+
     available_days = [
         d for d in DAY_ORDER
-        if d in df['day_of_week'].dropna().unique()
+        if d in df['day_of_week'].unique()
     ]
 
     selected_days = st.sidebar.multiselect(
