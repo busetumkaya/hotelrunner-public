@@ -106,40 +106,81 @@ df = df[~df.apply(is_test, axis=1)]
 st.sidebar.header("Filters")
 
 if 'day_of_week' in df.columns:
-    day = st.sidebar.selectbox(
+    DAY_ORDER = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+]
+
+if 'day_of_week' in df.columns:
+
+    available_days = [
+        d for d in DAY_ORDER
+        if d in df['day_of_week'].dropna().unique()
+    ]
+
+    selected_days = st.sidebar.multiselect(
         "Day of Week",
-        ["All"] + sorted(df['day_of_week'].dropna().unique())
+        available_days
     )
+
+    if selected_days:
+
+        df = df[
+            df['day_of_week'].isin(selected_days)
+        ]
 
     if day != "All":
         df = df[df['day_of_week'].str.lower() == day.lower()]
 
-segment_option = st.sidebar.selectbox(
-    "Segment",
-    ["All", "EN", "TR", "OTAs", "HOTELIERS", "Leads", "Users"]
+selected_segments = st.sidebar.multiselect(
+    "Segments",
+    ["EN", "TR", "OTAs", "HOTELIERS", "Leads", "Users"]
 )
 
-if segment_option in SEGMENT_RULES:
+if selected_segments:
 
-    patterns = SEGMENT_RULES[segment_option]
+    combined_mask = pd.Series(False, index=df.index)
 
-    mask = (
-        df['name'].apply(lambda x: match_segment(x, patterns)) |
-        df['campaign'].apply(lambda x: match_segment(x, patterns))
-    )
+    for segment in selected_segments:
 
-    df = df[mask]
+        # normal regex-rule segments
+        if segment in SEGMENT_RULES:
 
-elif segment_option == "HOTELIERS":
+            patterns = SEGMENT_RULES[segment]
 
-    ota_pattern = r"connect|türsab|ratefor"
+            mask = (
+                df['name'].apply(lambda x: match_segment(x, patterns)) |
+                df['campaign'].apply(lambda x: match_segment(x, patterns))
+            )
 
-    mask = ~(
-        df['name'].str.contains(ota_pattern, case=False, na=False, regex=True) |
-        df['campaign'].str.contains(ota_pattern, case=False, na=False, regex=True)
-    )
+        # HOTELIERS special logic
+        elif segment == "Hoteliers":
 
-    df = df[mask]
+            ota_pattern = r"connect|türsab|ratefor"
+
+            mask = ~(
+                df['name'].str.contains(
+                    ota_pattern,
+                    case=False,
+                    na=False,
+                    regex=True
+                ) |
+                df['campaign'].str.contains(
+                    ota_pattern,
+                    case=False,
+                    na=False,
+                    regex=True
+                )
+            )
+
+        combined_mask = combined_mask | mask
+
+    df = df[combined_mask]
 
 # -----------------------------
 # WEIGHTS
@@ -157,16 +198,27 @@ if 'hour_interval' not in df.columns:
     st.error("Missing 'hour_interval' column")
     st.stop()
 
-agg = df.groupby('hour_interval').agg({
-    'base': 'sum',
-    'unique_opens': 'sum',
-    'unique_clicks': 'sum',
-    'opt_outs': 'sum'
-}).reset_index()
+agg = df.groupby('hour_interval').apply(
+    lambda x: pd.Series({
 
-agg['open_rate'] = agg['unique_opens'] / agg['base']
-agg['ctr'] = agg['unique_clicks'] / agg['base']
-agg['opt_out_rate'] = agg['opt_outs'] / agg['base']
+        'base': x['base'].sum(),
+
+        'open_rate': np.average(
+            x['open_rate'],
+            weights=x['base']
+        ),
+
+        'ctr': np.average(
+            x['unique_ctr'],
+            weights=x['base']
+        ),
+
+        'opt_out_rate': np.average(
+            x['opt_out_rate'],
+            weights=x['base']
+        )
+    })
+).reset_index()
 
 agg = agg.fillna(0)
 
