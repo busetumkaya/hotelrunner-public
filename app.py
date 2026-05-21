@@ -93,6 +93,36 @@ df['base'] = np.where(df['delivered'] > 0, df['delivered'], df['sent'])
 df = df[df['base'] > 0]
 
 # -----------------------------
+# CLEAN RATE COLUMNS
+# -----------------------------
+rate_cols = [
+    'open_rate',
+    'unique_ctr',
+    'opt_out_rate'
+]
+
+for col in rate_cols:
+
+    if col in df.columns:
+
+        df[col] = (
+            df[col]
+            .astype(str)
+            .str.replace('%', '', regex=False)
+            .str.replace(',', '.', regex=False)
+            .str.strip()
+        )
+
+        df[col] = pd.to_numeric(
+            df[col],
+            errors='coerce'
+        )
+
+        df[col] = df[col].fillna(0) / 100
+
+st.write(df[rate_cols].dtypes)
+
+# -----------------------------
 # TEST FILTER
 # -----------------------------
 def is_test(row):
