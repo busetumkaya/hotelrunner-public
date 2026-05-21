@@ -120,8 +120,6 @@ for col in rate_cols:
 
         df[col] = df[col].fillna(0) / 100
 
-st.write(df[rate_cols].dtypes)
-
 # -----------------------------
 # TEST FILTER
 # -----------------------------
@@ -136,6 +134,10 @@ df = df[~df.apply(is_test, axis=1)]
 # -----------------------------
 st.sidebar.header("Filters")
 
+# -----------------------------
+# DAY FILTER
+# -----------------------------
+
 DAY_ORDER = [
     "Monday",
     "Tuesday",
@@ -148,11 +150,12 @@ DAY_ORDER = [
 
 if 'day_of_week' in df.columns:
 
+    # clean values safely
     df['day_of_week'] = (
         df['day_of_week']
         .astype(str)
         .str.strip()
-        .str.lower()
+        .str.title()
     )
 
     available_days = [
@@ -318,7 +321,7 @@ if overall_best['hour_num'] < 9 or overall_best['hour_num'] >= 18:
             f"(Score: {row['score']:.2f})"
         )
 
-col1, col2, col3 = st.columns(3)
+col1, col2 = st.columns(2)
 
 with col1:
     st.metric(
@@ -328,20 +331,22 @@ with col1:
 
 with col2:
     st.metric(
-        "💼 Best Business Hour",
+        "💼 Business Hours Best",
         business_best['hour_interval']
     )
 
-with col2:
-    st.metric(
-        "📈 Best CTR",
-        f"{overall_best['ctr']:.2%}"
-    )
+col3, col4 = st.columns(2)
 
 with col3:
     st.metric(
+        "📈 CTR",
+        f"{business_best['ctr']:.2%}"
+    )
+
+with col4:
+    st.metric(
         "📬 Open Rate",
-        f"{overall_best['open_rate']:.2%}"
+        f"{business_best['open_rate']:.2%}"
     )
 
 st.subheader("📊 Executive Summary")
