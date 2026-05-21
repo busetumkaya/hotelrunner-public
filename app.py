@@ -176,7 +176,7 @@ if 'day_of_week' in df.columns:
 
     available_days = [
     d for d in DAY_ORDER
-    if d in existing_days
+    if d in selected_days
     ]
 
     if selected_days:
