@@ -171,7 +171,7 @@ if 'day_of_week' in df.columns:
     ]
 
     selected_days = st.sidebar.multiselect(
-        "Day of Week",
+        "Day of week",
         available_days
     )
 
