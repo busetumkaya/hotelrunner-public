@@ -165,7 +165,7 @@ if 'day_of_week' in df.columns:
         .str.title()
     )
 
-    existing_days = (
+    selected_days = (
     df['day_of_week']
     .dropna()
     .astype(str)
