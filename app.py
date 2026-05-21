@@ -146,6 +146,9 @@ st.sidebar.header("Filters")
 # -----------------------------
 # DAY FILTER
 # -----------------------------
+# -----------------------------
+# DAY FILTER
+# -----------------------------
 DAY_ORDER = [
     "Monday",
     "Tuesday",
@@ -158,6 +161,7 @@ DAY_ORDER = [
 
 if 'day_of_week' in df.columns:
 
+    # clean column
     df['day_of_week'] = (
         df['day_of_week']
         .astype(str)
@@ -165,20 +169,26 @@ if 'day_of_week' in df.columns:
         .str.title()
     )
 
-    selected_days = (
-    df['day_of_week']
-    .dropna()
-    .astype(str)
-    .str.strip()
-    .str.title()
-    .unique()
+    # actual existing days
+    existing_days = (
+        df['day_of_week']
+        .dropna()
+        .unique()
     )
 
+    # ordered correctly
     available_days = [
-    d for d in DAY_ORDER
-    if d in selected_days
+        d for d in DAY_ORDER
+        if d in existing_days
     ]
 
+    # USER SELECTION UI
+    selected_days = st.sidebar.multiselect(
+        "Day of Week",
+        available_days
+    )
+
+    # apply filter
     if selected_days:
 
         df = df[
