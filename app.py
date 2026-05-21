@@ -105,8 +105,7 @@ df = df[~df.apply(is_test, axis=1)]
 # -----------------------------
 st.sidebar.header("Filters")
 
-if 'day_of_week' in df.columns:
-    DAY_ORDER = [
+DAY_ORDER = [
     "Monday",
     "Tuesday",
     "Wednesday",
@@ -134,12 +133,9 @@ if 'day_of_week' in df.columns:
             df['day_of_week'].isin(selected_days)
         ]
 
-    if day != "All":
-        df = df[df['day_of_week'].str.lower() == day.lower()]
-
 selected_segments = st.sidebar.multiselect(
     "Segments",
-    ["EN", "TR", "OTAs", "HOTELIERS", "Leads", "Users"]
+    ["EN", "TR", "OTAs", "Hoteliers", "Leads", "Users"]
 )
 
 if selected_segments:
