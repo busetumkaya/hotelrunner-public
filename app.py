@@ -4,6 +4,62 @@ import numpy as np
 import re
 import plotly.express as px
 
+# -----------------------------
+# SEGMENT RULES
+# -----------------------------
+SEGMENT_RULES = {
+    "EN": [
+        r"\(en\)",
+        r"\ben\b",
+        r"en users",
+        r"en leads",
+        r"- en",
+        r"-en"
+    ],
+
+    "TR": [
+        r"\(tr\)",
+        r"\btr\b",
+        r"tr users",
+        r"- tr",
+        r"-tr"
+    ],
+    
+        "OTAs": [
+        r"\bconnect\b",
+        r"- \bconnect\b",
+        r"-\bconnect\b",
+        r"TÜRSAB",
+        r"- TÜRSAB",
+        r"-TÜRSAB",
+        r"Ratefor",
+        r"- Ratefor",
+        r"-Ratefor"
+    ],
+
+        "Leads": [
+        r"leads",
+        r"- leads",
+        r"-leads",
+        r"\(leads\)"
+    ],
+
+        "Users": [
+        r"users",
+        r"- users",
+        r"-users",
+        r"\(users\)"
+    ]
+}
+
+def match_segment(text, patterns):
+    text = str(text).lower()
+
+    return any(
+        re.search(pattern, text)
+        for pattern in patterns
+    )
+
 st.title("Send Time Optimizer")
 
 # -----------------------------
@@ -58,13 +114,32 @@ if 'day_of_week' in df.columns:
     if day != "All":
         df = df[df['day_of_week'].str.lower() == day.lower()]
 
-segment = st.sidebar.text_input("Segment (EN, TR)")
+segment_option = st.sidebar.selectbox(
+    "Segment",
+    ["All", "EN", "TR", "OTAs", "HOTELIERS", "Leads", "Users"]
+)
 
-if segment:
-    df = df[
-        df['name'].str.contains(segment, case=False, na=False) |
-        df['campaign'].str.contains(segment, case=False, na=False)
-    ]
+if segment_option in SEGMENT_RULES:
+
+    patterns = SEGMENT_RULES[segment_option]
+
+    mask = (
+        df['name'].apply(lambda x: match_segment(x, patterns)) |
+        df['campaign'].apply(lambda x: match_segment(x, patterns))
+    )
+
+    df = df[mask]
+
+elif segment_option == "HOTELIERS":
+
+    ota_pattern = r"connect|türsab|ratefor"
+
+    mask = ~(
+        df['name'].str.contains(ota_pattern, case=False, na=False, regex=True) |
+        df['campaign'].str.contains(ota_pattern, case=False, na=False, regex=True)
+    )
+
+    df = df[mask]
 
 # -----------------------------
 # WEIGHTS
@@ -103,6 +178,48 @@ agg['score'] = (
 
 agg = agg.sort_values("score", ascending=False)
 
+avg_ctr = agg['ctr'].mean()
+avg_open = agg['open_rate'].mean()
+avg_opt_out = agg['opt_out_rate'].mean()
+
+top = agg.iloc[0]
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric(
+        "🏆 Best Hour",
+        top['hour_interval']
+    )
+
+with col2:
+    st.metric(
+        "📈 Best CTR",
+        f"{top['ctr']:.2%}"
+    )
+
+with col3:
+    st.metric(
+        "📬 Open Rate",
+        f"{top['open_rate']:.2%}"
+    )
+
+st.subheader("📊 Executive Summary")
+
+st.info(f"""
+The strongest performing send window is **{top['hour_interval']}**.
+
+This interval outperforms other hours due to:
+- stronger click-through performance
+- healthy open rates
+- lower unsubscribe behavior
+- statistically meaningful send volume
+
+Recommendation:
+Prioritize this time window for future campaigns,
+especially for the selected segment and day filters.
+""")
+
 # -----------------------------
 # OUTPUT
 # -----------------------------
@@ -113,13 +230,32 @@ st.bar_chart(agg.set_index("hour_interval")["score"])
 top = agg.iloc[0]
 st.success(f"Best time is: {top['hour_interval']} (Score: {top['score']:.2f})")
 
-st.subheader("Why this hour?")
-st.write(f"""
-- Open Rate: {top['open_rate']:.2%}
-- CTR: {top['ctr']:.2%}
-- Opt-out Rate: {top['opt_out_rate']:.2%}
-- Based on {int(top['base'])} sends
-""")
+st.subheader("Why this hour performs well")
+
+reasons = []
+
+if top['ctr'] > avg_ctr:
+    reasons.append(
+        f"CTR ({top['ctr']:.2%}) is above average ({avg_ctr:.2%})"
+    )
+
+if top['open_rate'] > avg_open:
+    reasons.append(
+        f"Open rate ({top['open_rate']:.2%}) is above average ({avg_open:.2%})"
+    )
+
+if top['opt_out_rate'] < avg_opt_out:
+    reasons.append(
+        f"Opt-out rate ({top['opt_out_rate']:.2%}) is lower than average ({avg_opt_out:.2%})"
+    )
+
+if top['base'] > agg['base'].median():
+    reasons.append(
+        f"Performance is supported by high send volume ({int(top['base'])} sends)"
+    )
+
+for reason in reasons:
+    st.write(f"• {reason}")
 
 # -----------------------------
 # HEATMAP
