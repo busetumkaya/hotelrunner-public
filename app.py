@@ -328,19 +328,19 @@ with col2:
 with col2:
     st.metric(
         "📈 Best CTR",
-        f"{top['ctr']:.2%}"
+        f"{overall_best['ctr']:.2%}"
     )
 
 with col3:
     st.metric(
         "📬 Open Rate",
-        f"{top['open_rate']:.2%}"
+        f"{overall_best['open_rate']:.2%}"
     )
 
 st.subheader("📊 Executive Summary")
 
 st.info(f"""
-The strongest performing send window is **{top['hour_interval']}**.
+The strongest performing send window is **{overall_best['hour_interval']}**.
 
 This interval outperforms other hours due to:
 - stronger click-through performance
