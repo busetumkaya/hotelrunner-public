@@ -165,15 +165,19 @@ if 'day_of_week' in df.columns:
         .str.title()
     )
 
-    available_days = [
-        d for d in DAY_ORDER
-        if d in df['day_of_week'].unique()
-    ]
-
-    selected_days = st.sidebar.multiselect(
-        "Day of week",
-        available_days
+    existing_days = (
+    df['day_of_week']
+    .dropna()
+    .astype(str)
+    .str.strip()
+    .str.title()
+    .unique()
     )
+
+    available_days = [
+    d for d in DAY_ORDER
+    if d in existing_days
+    ]
 
     if selected_days:
 
