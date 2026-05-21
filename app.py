@@ -90,6 +90,7 @@ for col in numeric_cols:
         df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
 df['base'] = np.where(df['delivered'] > 0, df['delivered'], df['sent'])
+df = df[df['base'] > 0]
 
 # -----------------------------
 # TEST FILTER
@@ -194,24 +195,31 @@ if 'hour_interval' not in df.columns:
     st.error("Missing 'hour_interval' column")
     st.stop()
 
+def weighted_avg(values, weights):
+
+    if weights.sum() == 0:
+        return 0
+
+    return np.average(values, weights=weights)
+
 agg = df.groupby('hour_interval').apply(
     lambda x: pd.Series({
 
         'base': x['base'].sum(),
 
-        'open_rate': np.average(
+        'open_rate': weighted_avg(
             x['open_rate'],
-            weights=x['base']
+            x['base']
         ),
 
-        'ctr': np.average(
+        'ctr': weighted_avg(
             x['unique_ctr'],
-            weights=x['base']
+            x['base']
         ),
 
-        'opt_out_rate': np.average(
+        'opt_out_rate': weighted_avg(
             x['opt_out_rate'],
-            weights=x['base']
+            x['base']
         )
     })
 ).reset_index()
