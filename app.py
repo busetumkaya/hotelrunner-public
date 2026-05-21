@@ -264,18 +264,65 @@ agg['score'] = (
 
 agg = agg.sort_values("score", ascending=False)
 
+# -----------------------------
+# BUSINESS HOURS FILTER
+# -----------------------------
+def extract_hour(interval):
+
+    try:
+        return int(str(interval).split(":")[0])
+    except:
+        return None
+
+agg['hour_num'] = agg['hour_interval'].apply(extract_hour)
+
+business_hours = agg[
+    (agg['hour_num'] >= 9) &
+    (agg['hour_num'] < 18)
+].copy()
+
+overall_best = agg.iloc[0]
+
+if not business_hours.empty:
+    business_best = business_hours.iloc[0]
+else:
+    business_best = overall_best
+
 avg_ctr = agg['ctr'].mean()
 avg_open = agg['open_rate'].mean()
 avg_opt_out = agg['opt_out_rate'].mean()
 
-top = agg.iloc[0]
+overall_best = agg.iloc[0]
 
-col1, col2, col3 = st.columns(3)
+if overall_best['hour_num'] < 9 or overall_best['hour_num'] >= 18:
+
+    st.warning(
+        "Top-performing hour falls outside business hours."
+    )
+
+    st.subheader("Recommended Business Hours")
+
+    top_business = business_hours.head(3)
+
+    for _, row in top_business.iterrows():
+
+        st.write(
+            f"• {row['hour_interval']} "
+            f"(Score: {row['score']:.2f})"
+        )
+
+col1, col2 = st.columns(2)
 
 with col1:
     st.metric(
-        "🏆 Best Hour",
-        top['hour_interval']
+        "🏆 Overall Best",
+        overall_best['hour_interval']
+    )
+
+with col2:
+    st.metric(
+        "💼 Best Business Hour",
+        business_best['hour_interval']
     )
 
 with col2:
