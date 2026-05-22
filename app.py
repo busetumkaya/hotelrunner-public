@@ -180,10 +180,6 @@ if 'day_of_week' in df.columns:
             df['day_of_week'].isin(selected_days)
         ]
 
-st.write(selected_days)
-st.write(df['day_of_week'].unique())
-st.write(len(df))
-
 selected_segments = st.sidebar.multiselect(
     "Segments",
     ["EN", "TR", "OTAs", "Hoteliers", "Leads", "Users"]
