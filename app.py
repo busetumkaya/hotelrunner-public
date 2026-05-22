@@ -137,23 +137,14 @@ st.sidebar.header("Filters")
 # -----------------------------
 # DAY FILTER
 # -----------------------------
-
-# -----------------------------
-# FILTERS
-# -----------------------------
-st.sidebar.header("Filters")
-
-# -----------------------------
-# DAY FILTER
-# -----------------------------
 DAY_ORDER = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday"
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
 ]
 
 if 'day_of_week' in df.columns:
